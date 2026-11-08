@@ -10,3 +10,4 @@ wheels/
 .venv
 # Logs générés par l'application
 logs/
+storage/events.json
