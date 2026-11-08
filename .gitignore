@@ -8,6 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
-# Logs générés par l'application
+
+# Fichiers générés par le pipeline
 logs/
-storage/events.json
+storage/processed/
+serving/output/
