@@ -1,17 +1,22 @@
+
 import os
 
 import matplotlib.pyplot as plt
 
 from log_config import get_logger
 
+
 """
 Dashboard matplotlib : 3 indicateurs + un résumé statistique.
 """
 
+
 logger = get_logger('serving')
+
 
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output')
 DASHBOARD_FILE = os.path.join(OUTPUT_DIR, 'dashboard.png')
+
 
 TOP_COUNTRIES = 15
 TOP_INVALID_USERS = 10
@@ -27,7 +32,8 @@ def draw_bars(ax, items: list, title: str, xlabel: str, ylabel: str, color: str)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.tick_params(axis='x', labelrotation=45, labelsize=8)
-    ax.margins(y=0.15)  # place pour les valeurs
+    ax.margins(y=0.15)
+
     if not items:
         ax.text(0.5, 0.5, 'No data', ha='center', va='center', transform=ax.transAxes)
 
@@ -43,12 +49,17 @@ def draw_summary(ax, statistics: dict):
         ('Distinct invalid users', statistics['distinct_invalid_users']),
         ('Distinct IP addresses', statistics['distinct_ips']),
     ]
+
     ax.set_title('Summary', fontsize=11, fontweight='bold')
+
     for number, (label, value) in enumerate(lines):
         y = 0.88 - number * 0.15
         ax.text(0.05, y, label, fontsize=11, transform=ax.transAxes)
-        ax.text(0.95, y, f'{value:,}'.replace(',', ' '), fontsize=11, fontweight='bold',
-                ha='right', transform=ax.transAxes)
+        ax.text(
+            0.95, y, f'{value:,}'.replace(',', ' '),
+            fontsize=11, fontweight='bold',
+            ha='right', transform=ax.transAxes
+        )
 
 
 def build_dashboard(statistics: dict, output_file: str = DASHBOARD_FILE, show: bool = True):
@@ -59,17 +70,23 @@ def build_dashboard(statistics: dict, output_file: str = DASHBOARD_FILE, show: b
         fig.suptitle('SSH log analysis dashboard', fontsize=15, fontweight='bold')
 
         countries = statistics['failures_by_country']
-        draw_bars(axes[0][0], countries[:TOP_COUNTRIES],
-                  f'Failed logins by country (top {min(TOP_COUNTRIES, len(countries))} of {len(countries)})',
-                  'Country', 'Failed attempts', '#d62728')
+        draw_bars(
+            axes[0][0], countries[:TOP_COUNTRIES],
+            f'Failed logins by country (top {min(TOP_COUNTRIES, len(countries))} of {len(countries)})',
+            'Country', 'Failed attempts', '#d62728'
+        )
 
-        draw_bars(axes[0][1], statistics['successes_by_user'],
-                  'Successful logins by user', 'User', 'Successful logins', '#2ca02c')
+        draw_bars(
+            axes[0][1], statistics['successes_by_user'],
+            'Successful logins by user', 'User', 'Successful logins', '#87CEEB'
+        )
 
-        draw_bars(axes[1][0], statistics['invalid_users'][:TOP_INVALID_USERS],
-                  f"Failed logins with invalid user: {statistics['invalid_user_attempts']} "
-                  f"(top {TOP_INVALID_USERS} usernames)",
-                  'Invalid username', 'Failed attempts', '#ff7f0e')
+        draw_bars(
+            axes[1][0], statistics['invalid_users'][:TOP_INVALID_USERS],
+            f"Failed logins with invalid user: {statistics['invalid_user_attempts']} "
+            f"(top {TOP_INVALID_USERS} usernames)",
+            'Invalid username', 'Failed attempts', '#FFD700'
+        )
 
         draw_summary(axes[1][1], statistics)
 
@@ -77,6 +94,7 @@ def build_dashboard(statistics: dict, output_file: str = DASHBOARD_FILE, show: b
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         fig.savefig(output_file, dpi=110)
         logger.info(f"Dashboard saved in {output_file}")
+
     except (OSError, ValueError, KeyError) as e:
         logger.error(f"Dashboard generation error: {e}")
         plt.close('all')
@@ -84,5 +102,6 @@ def build_dashboard(statistics: dict, output_file: str = DASHBOARD_FILE, show: b
 
     if show:
         plt.show()
+
     plt.close(fig)
     return output_file

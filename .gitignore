@@ -13,3 +13,5 @@ wheels/
 logs/
 storage/processed/
 serving/output/
+
+.env
