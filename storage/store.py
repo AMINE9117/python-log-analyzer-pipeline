@@ -2,16 +2,17 @@
 import json
 import os
 
-import pymysql
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 
 from log_config import get_logger
 
 
 """
-Sauvegarde et lecture des données traitees.
+Sauvegarde et lecture des donnees traitees.
 
-MariaDB :
+PostgreSQL :
     - events : evenements SSH
     - pipeline_statistics : statistiques du dashboard
 
@@ -34,19 +35,18 @@ STATISTICS_FILE = os.path.join(PROCESSED_DIR, 'statistics.json')
 GEO_CACHE_FILE = os.path.join(STORAGE_DIR, 'geo_cache.json')
 
 
-# ---------- CONNEXION MARIADB ----------
+# ---------- CONNEXION POSTGRESQL ----------
 
 def get_connection():
-    """Ouvre une connexion a MariaDB."""
+    """Ouvre une connexion a PostgreSQL."""
 
-    return pymysql.connect(
-        host=os.getenv('DB_HOST', '127.0.0.1'),
-        port=int(os.getenv('DB_PORT', '3306')),
+    return psycopg2.connect(
+        host=os.getenv('DB_HOST', 'localhost'),
+        port=int(os.getenv('DB_PORT', '5432')),
         user=os.getenv('DB_USER'),
         password=os.getenv('DB_PASSWORD'),
-        database=os.getenv('DB_NAME'),
-        charset='utf8mb4',
-        cursorclass=pymysql.cursors.DictCursor
+        dbname=os.getenv('DB_NAME'),
+        cursor_factory=RealDictCursor
     )
 
 
@@ -62,7 +62,7 @@ def create_tables():
 
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS events (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                     month VARCHAR(10),
                     day VARCHAR(4),
                     time VARCHAR(16),
@@ -77,20 +77,20 @@ def create_tables():
                     method VARCHAR(100),
                     invalid_user BOOLEAN,
                     reason TEXT,
-                    count INT,
+                    count INTEGER,
                     country VARCHAR(100)
                 )
             """)
 
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS pipeline_statistics (
-                    id TINYINT PRIMARY KEY,
-                    content LONGTEXT
+                    id SMALLINT PRIMARY KEY,
+                    content TEXT
                 )
             """)
 
         connection.commit()
-        logger.info("MariaDB tables are ready.")
+        logger.info("PostgreSQL tables are ready.")
 
     finally:
         connection.close()
@@ -178,16 +178,16 @@ def is_up_to_date(data_dir: str, state_file: str = STATE_FILE,
         finally:
             connection.close()
 
-    except pymysql.MySQLError as e:
+    except psycopg2.Error as e:
         logger.error(f"Database check error: {e}")
         return False
 
 
-# ---------- EVENEMENTS MARIADB ----------
+# ---------- EVENEMENTS POSTGRESQL ----------
 
 def save_events(events: list, fields: list, data_dir: str,
                 events_file=None, state_file: str = STATE_FILE):
-    """Enregistre les evenements dans MariaDB."""
+    """Enregistre les evenements dans PostgreSQL."""
 
     try:
         create_tables()
@@ -243,11 +243,11 @@ def save_events(events: list, fields: list, data_dir: str,
         finally:
             connection.close()
 
-    except (pymysql.MySQLError, TypeError, ValueError) as e:
+    except (psycopg2.Error, TypeError, ValueError) as e:
         logger.error(f"Database save error: {e}")
         return False
 
-    logger.info(f"{len(events)} events saved in MariaDB.")
+    logger.info(f"{len(events)} events saved in PostgreSQL.")
 
     return save_json(
         {'files': get_data_state(data_dir)},
@@ -256,7 +256,7 @@ def save_events(events: list, fields: list, data_dir: str,
 
 
 def load_events(events_file=None):
-    """Charge les evenements depuis MariaDB."""
+    """Charge les evenements depuis PostgreSQL."""
 
     try:
         create_tables()
@@ -275,7 +275,7 @@ def load_events(events_file=None):
                         pid,
                         event_type,
                         status,
-                        event_user AS user,
+                        event_user AS "user",
                         ip,
                         port,
                         method,
@@ -296,11 +296,11 @@ def load_events(events_file=None):
             event['count'] = int(event['count'] or 1)
             event['invalid_user'] = bool(event['invalid_user'])
 
-        logger.info(f"{len(events)} events loaded from MariaDB.")
+        logger.info(f"{len(events)} events loaded from PostgreSQL.")
 
         return events
 
-    except (pymysql.MySQLError, TypeError, ValueError) as e:
+    except (psycopg2.Error, TypeError, ValueError) as e:
         logger.error(f"Database read error: {e}")
         return []
 
@@ -318,7 +318,7 @@ def save_geo_cache(cache: dict, file_path: str = GEO_CACHE_FILE):
 # ---------- STATISTIQUES ----------
 
 def save_statistics(statistics: dict, file_path: str = STATISTICS_FILE):
-    """Enregistre les statistiques dans MariaDB et JSON."""
+    """Enregistre les statistiques dans PostgreSQL et JSON."""
 
     try:
         create_tables()
@@ -330,7 +330,8 @@ def save_statistics(statistics: dict, file_path: str = STATISTICS_FILE):
                 cursor.execute("""
                     INSERT INTO pipeline_statistics (id, content)
                     VALUES (1, %s)
-                    ON DUPLICATE KEY UPDATE content = VALUES(content)
+                    ON CONFLICT (id)
+                    DO UPDATE SET content = EXCLUDED.content
                 """, (
                     json.dumps(statistics, ensure_ascii=False),
                 ))
@@ -340,7 +341,7 @@ def save_statistics(statistics: dict, file_path: str = STATISTICS_FILE):
         finally:
             connection.close()
 
-    except (pymysql.MySQLError, TypeError, ValueError) as e:
+    except (psycopg2.Error, TypeError, ValueError) as e:
         logger.error(f"Statistics database save error: {e}")
         return False
 
