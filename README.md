@@ -1,44 +1,44 @@
 
-# Projet de gestion des logs
+ Projet de gestion des logs
 
-**Réalisé par :** Amine Nfissi  
-**École :** ESISA  
-**Module :** Python avancé  
-**Professeur :** LAHMER 
+Realise par : Amine Nfissi  
+Ecole : ESISA  
+Module : Python avance  
+Professeur : LAHMER  
 
-## 1. Présentation
+ 1 Presentation
 
-Ce projet permet de gérer et d'analyser des fichiers logs (fichiers qui enregistrent les activités d'une application).
+Ce projet permet de gerer et d'analyser des fichiers logs (fichiers qui enregistrent les activites d'une application).
 
-## 2. Objectif
+ 2 Objectif
 
-L'objectif est de lire les logs et de récupérer les informations importantes pour mieux comprendre les connexions.
+L'objectif est de lire les logs et de recuperer les informations importantes pour mieux comprendre les connexions. 
 
-## 3. Fonctionnement
+ 3 Fonctionnement
 
-Le projet contient plusieurs étapes :
+Le projet contient plusieurs etapes :
 
-1. Ingestion des fichiers logs (lecture des fichiers).
-2. Extraction des informations (récupération des données).
-3. Transformation des données (organisation des informations).
-4. Géolocalisation des adresses IP avec IPinfo.
-5. Stockage des données dans une base de données.
-6. Calcul des statistiques.
-7. Création d'un dashboard (tableau de bord).
+1 Ingestion des fichiers logs (lecture des fichiers).
+2 Extraction des informations (recuperation des donnees).
+3 Transformation des donnees (organisation des informations).
+4 Geolocalisation des adresses IP avec IPinfo.
+5 Stockage des donnees dans une base de donnees.
+6 Calcul des statistiques.
+7 Creation d'un dashboard (tableau de bord).
 
-## 4. Technologies utilisées
+ 4 Technologies utilisees
 
 - Python
-- MariaDB
+- PostgreSQL
 - IPinfo
 - Matplotlib
 - Git et GitHub
 
-## 5. Résultat
+ 5 Resultat
 
-Le projet permet d'obtenir des statistiques sur les connexions réussies et échouées. Il permet aussi de consulter les pays des adresses IP et de visualiser les résultats dans un dashboard.
+Le projet permet d'obtenir des statistiques sur les connexions reussies et echouees. Il permet aussi de consulter les pays des adresses IP et de visualiser les resultats dans un dashboard.
 
-## 6. Auteur
+ 6 Auteur
 
 Amine Nfissi  
-ESISA – Python avancé
+ESISA – Python avance

@@ -66,7 +66,7 @@ def geo_location(ip):
 
                     try:
                         delay = int(retry_after) if retry_after else RETRY_DELAY * attempt
-                    except ValueError:
+                    except (ValueError, TypeError):
                         delay = RETRY_DELAY * attempt
 
                     time.sleep(min(delay, 60))
@@ -98,7 +98,11 @@ def geo_location(ip):
                 logger.error(f"Invalid JSON response for {ip}")
                 return UNKNOWN
 
-            country = data.get('country_code') if isinstance(data, dict) else None
+            country = (
+                data.get('country_code') or data.get('country')
+                if isinstance(data, dict)
+                else None
+            )
 
             if not country:
                 logger.warning(f"No country found for {ip}")
