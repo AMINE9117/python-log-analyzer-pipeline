@@ -48,6 +48,14 @@ class TestStatistics(unittest.TestCase):
         self.assertEqual(stats['invalid_users'], [('admin', 1)])
         self.assertEqual(stats['distinct_ips'], 5)
 
+    def test_activity_over_time(self):
+        stats = statistics.compute_statistics(sample_events())
+        self.assertEqual(len(stats['activity_by_hour']), 24)
+        self.assertEqual(stats['activity_by_hour'][1], (1, 8))  # 8 lignes à 01:14
+        self.assertEqual(stats['activity_by_day'], [('May 24', 8)])
+        self.assertEqual(stats['busiest_moment'], {'day': 'May 24', 'hour': 1, 'lines': 8})
+        self.assertEqual(stats['period'], {'start': 'May 24 01:14', 'end': 'May 24 01:14'})
+
 
 class TestStorage(unittest.TestCase):
 
